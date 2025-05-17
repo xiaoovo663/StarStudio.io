@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全验证 - 访问控制</title>
+    <style>
+        body {
+            font-family: Arial, "Microsoft Yahei", sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .verification-box {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 380px;
+        }
+
+        h2 {
+            color: #222;
+            margin-bottom: 1.5rem;
+            font-size: 1.4em;
+        }
+
+        .checkbox-wrapper {
+            position: relative;
+            width: 100%;
+            height: 65px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #ddd;
+        }
+
+        .checkbox-wrapper.verified {
+            background: #00c853;
+            border-color: #009c3f;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-weight: 500;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .checkbox-wrapper.verified .checkbox-label {
+            color: white;
+        }
+
+        .loading-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00c853, #009c3f);
+            width: 0;
+            transition: width 2.5s linear;
+        }
+
+        .success-icon {
+            display: none;
+            font-size: 26px;
+            color: white;
+            margin-left: 8px;
+        }
+
+        .verified .success-icon {
+            display: inline-block;
+            animation: bounce 0.6s;
+        }
+
+        .message {
+            color: #666;
+            margin-top: 1.2rem;
+            font-size: 0.95em;
+            min-height: 20px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .error { color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="verification-box">
+        <h2>请确认您不是机器人</h2>
+        <div class="checkbox-wrapper" id="verifyCheckbox">
+            <div class="checkbox-label">
+                <span class="text">点击进行验证</span>
+                <span class="success-icon">✓</span>
+            </div>
+            <div class="loading-bar"></div>
+        </div>
+        <p class="message" id="message">请完成验证以继续访问</p >
+    </div>
+
+    <script>
+        const checkbox = document.getElementById('verifyCheckbox');
+        const messageEl = document.getElementById('message');
+        let isVerified = false;
+        let attempts = 0;
+
+        checkbox.addEventListener('click', initVerification);
+
+        function initVerification() {
+            if (isVerified) return;
+            
+            attempts++;
+            if (attempts > 3) {
+                showMessage('尝试次数过多，请10分钟后再试', true);
+                checkbox.style.pointerEvents = 'none';
+                return;
+            }
+
+            startLoadingAnimation();
+        }
+
+        function startLoadingAnimation() {
+            checkbox.classList.add('verified');
+            checkbox.querySelector('.text').style.opacity = '0';
+            showMessage('正在验证中...');
+            
+            const loadingBar = checkbox.querySelector('.loading-bar');
+            loadingBar.style.width = '100%';
+
+            // 模拟验证过程
+            setTimeout(() => {
+                if (Math.random() < 0.85) { // 85%成功率
+                    handleSuccess();
+                } else {
+                    handleError();
+                }
+            }, 2500);
+        }
+
+        function handleSuccess() {
+            isVerified = true;
+            showMessage('验证成功！等待xiaoovo.github.io响应');
+            checkbox.style.cursor = 'default';
+            checkbox.style.pointerEvents = 'none';
+            
+            // 2秒后跳转
+            setTimeout(() => {
+                window.location.href = 'https://xiaoovo663.github.io/mcworld.net.cn/';
+            }, 2000);
+        }
+
+        function handleError() {
+            checkbox.classList.remove('verified');
+            checkbox.querySelector('.text').style.opacity = '1';
+            checkbox.querySelector('.loading-bar').style.width = '0';
+            showMessage(`验证失败（${attempts}/3），请重试`, true);
+            
+            // 错误动画
+            checkbox.style.animation = 'shake 0.4s';
+            setTimeout(() => {
+                checkbox.style.animation = '';
+            }, 400);
+        }
+
+        function showMessage(text, isError = false) {
+            messageEl.textContent = text;
+            messageEl.className = 'message' + (isError ? ' error' : '');
+        }
+
+        // 添加抖动动画
+        const shakeKeyframes = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                20% { transform: translateX(-8px); }
+                40% { transform: translateX(8px); }
+                60% { transform: translateX(-6px); }
+                80% { transform: translateX(6px); }
+            }
+        `;
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = shakeKeyframes;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html>
